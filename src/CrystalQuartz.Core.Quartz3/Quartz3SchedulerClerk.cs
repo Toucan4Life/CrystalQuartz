@@ -14,7 +14,6 @@
     internal class Quartz3SchedulerClerk : ISchedulerClerk
     {
         private static readonly TriggerTypeExtractor TriggerTypeExtractor = new TriggerTypeExtractor();
-
         private readonly IScheduler _scheduler;
 
         public Quartz3SchedulerClerk(IScheduler scheduler)
@@ -153,6 +152,11 @@
             }
 
             return result;
+        }
+
+        public IScheduler GetScheduler()
+        {
+            return _scheduler;
         }
 
         private static TriggerSecondaryData GetTriggerSecondaryData(ITrigger trigger)

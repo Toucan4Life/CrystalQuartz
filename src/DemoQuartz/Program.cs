@@ -12,7 +12,7 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 
-app.UseCrystalQuartz(CreateScheduler, new CrystalQuartzOptions { TimelineSpan = TimeSpan.FromMinutes(1), IsReadOnly = false }); ;
+app.UseCrystalQuartz(CreateScheduler, new CrystalQuartzOptions { TimelineSpan = TimeSpan.FromMinutes(10), IsReadOnly = false, IsClustered = true }); ;
 
 app.Run();
 
@@ -107,6 +107,7 @@ scheduler.Start();
 return scheduler;
 }
 
+[PersistJobDataAfterExecution]
 public class HelloJob : IJob
 {
     private static readonly Random Random = new Random();

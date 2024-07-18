@@ -82,6 +82,13 @@
         /// Gets or sets options for read-only mode
         /// </summary>
         public bool IsReadOnly { get; set; }
+
+        /// <summary>
+        /// Gets or sets options for clustered environment.
+        /// In Clustered mode, each job should have the DataPersistence attribute, as 
+        /// CrystalQuartz will use the job data map to synchronize between the cluster
+        /// </summary>
+        public bool IsClustered { get; set; }
     }
 
     public class ConfigurableTraversingOptions

@@ -4,6 +4,7 @@ namespace CrystalQuartz.Core.Contracts
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using CrystalQuartz.Core.Domain;
+    using Quartz;
 
     /// <summary>
     /// Provides read-only access to scheduler data in terms of internal domain model.
@@ -29,5 +30,7 @@ namespace CrystalQuartz.Core.Contracts
         Task<TriggerDetailsData?> GetTriggerDetailsData(string name, string group);
 
         Task<IEnumerable<Type>> GetScheduledJobTypes();
+
+        IScheduler GetScheduler();
     }
 }

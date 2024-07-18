@@ -9,7 +9,7 @@
 		<Nullable>enable</Nullable>
 		<PackageId>Toucan4Life.$(AssemblyName)</PackageId>
 		<Authors>Toucan4Life</Authors>
-		<Version>1.0.2</Version>
+		<Version>1.1.0</Version>
 	</PropertyGroup>
 	<ItemGroup>
 		<Compile Include="..\CommonAssemblyInfo.cs">
@@ -20,6 +20,7 @@
 		<ProjectReference Include="..\CrystalQuartz.Core\CrystalQuartz.Core.csproj" />
 	</ItemGroup>
 	<ItemGroup>
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="Quartz" Version="3.11.0" />
 		<PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.435">
 			<PrivateAssets>all</PrivateAssets>

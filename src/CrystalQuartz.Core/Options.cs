@@ -27,7 +27,8 @@
             RegisteredInputType[] jobDataMapInputTypes,
             Type[] allowedJobTypes,
             Action<Exception> errorAction,
-            bool isReadOnly)
+            bool isReadOnly,
+            bool isClustered = false)
         {
             TimelineSpan = timelineSpan;
             SchedulerEngineResolvers = schedulerEngineResolvers;
@@ -43,6 +44,7 @@
             AllowedJobTypes = allowedJobTypes;
             ErrorAction = errorAction;
             IsReadOnly = isReadOnly;
+            IsClustered = isClustered;
         }
 
         public TimeSpan TimelineSpan { get; }
@@ -72,5 +74,7 @@
         public Action<Exception> ErrorAction { get; }
 
         public bool IsReadOnly { get; }
+
+        public bool IsClustered { get; }
     }
 }

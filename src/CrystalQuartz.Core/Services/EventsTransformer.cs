@@ -5,6 +5,7 @@
     using CrystalQuartz.Core.Domain.Events;
     using CrystalQuartz.Core.Services.ExceptionTraversing;
     using CrystalQuartz.Core.Services.JobResultAnalysing;
+    using CrystalQuartz.Core.Utils;
 
     public class EventsTransformer : IEventsTransformer
     {
@@ -25,7 +26,7 @@
 
             return new SchedulerEvent(
                 id,
-                DateTime.UtcNow,
+                DateTime.UtcNow.UnixTicks(),
                 rawEvent.Scope,
                 rawEvent.EventType,
                 rawEvent.ItemKey,

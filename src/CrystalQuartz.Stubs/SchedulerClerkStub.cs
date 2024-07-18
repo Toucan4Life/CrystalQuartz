@@ -6,6 +6,7 @@
     using System.Threading.Tasks;
     using CrystalQuartz.Core.Contracts;
     using CrystalQuartz.Core.Domain;
+    using Quartz;
 
     public class SchedulerClerkStub : ISchedulerClerk
     {
@@ -47,6 +48,11 @@
                 .Select(j => j.JobType)
                 .Where(x => x != null)
                 .Distinct());
+        }
+
+        public IScheduler GetScheduler()
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -43,13 +43,15 @@
                 // cause issues at a global Scheduler scope.
                 try
                 {
-                    OnEventEmitted(new RawSchedulerEvent(
+                    OnEventEmitted(
+                        new RawSchedulerEvent(
                         SchedulerEventScope.Trigger,
                         SchedulerEventType.Complete,
                         context.Trigger.Key.ToString(),
                         context.FireInstanceId,
                         jobException.Unwrap<JobExecutionException>().Unwrap<SchedulerException>(),
-                        context.Result));
+                        context.Result),
+                        context);
                 }
                 catch
                 {
@@ -67,11 +69,13 @@
             // cause issues at a global Scheduler scope.
             try
             {
-                OnEventEmitted(new RawSchedulerEvent(
+                OnEventEmitted(
+                    new RawSchedulerEvent(
                     SchedulerEventScope.Trigger,
                     SchedulerEventType.Fired,
                     context.Trigger.Key.ToString(),
-                    context.FireInstanceId));
+                    context.FireInstanceId),
+                    context);
             }
             catch
             {
@@ -101,13 +105,15 @@
                 // cause issues at a global Scheduler scope.
                 try
                 {
-                    OnEventEmitted(new RawSchedulerEvent(
+                    OnEventEmitted(
+                        new RawSchedulerEvent(
                         SchedulerEventScope.Trigger,
                         SchedulerEventType.Complete,
                         context.Trigger.Key.ToString(),
                         context.FireInstanceId,
                         null,
-                        context.Result));
+                        context.Result),
+                        context);
                 }
                 catch
                 {
@@ -118,9 +124,9 @@
             return CompletedTask;
         }
 
-        private void OnEventEmitted(RawSchedulerEvent payload)
+        private void OnEventEmitted(RawSchedulerEvent payload,  IJobExecutionContext context)
         {
-            EventEmitted?.Invoke(this, new SchedulerEventArgs(payload));
+            EventEmitted?.Invoke(this, new SchedulerEventArgs(payload, context));
         }
     }
 }

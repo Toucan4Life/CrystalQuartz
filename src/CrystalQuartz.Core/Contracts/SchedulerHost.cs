@@ -51,7 +51,7 @@
 
         public void RaiseEvent(RawSchedulerEvent @event)
         {
-            _eventTarget.Push(@event);
+            _eventTarget.Push(@event, null);
         }
     }
 }

@@ -39,7 +39,8 @@
                 options.JobDataMapInputTypes,
                 options.AllowedJobTypes ?? new Type[0],
                 options.OnUnhandledPanelException,
-                options.IsReadOnly);
+                options.IsReadOnly,
+                options.IsClustered);
         }
 
         private static IJobResultAnalyzer CreateJobResultAnalyzer(JobResultAnalyserOptions options)

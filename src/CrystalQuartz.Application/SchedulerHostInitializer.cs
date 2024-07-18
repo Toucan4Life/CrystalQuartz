@@ -142,10 +142,10 @@ namespace CrystalQuartz.Application
                     quartzVersion, ex);
             }
 
-            var eventHub = new SchedulerEventHub(1000, _options.TimelineSpan, eventsTransformer);
+            var eventHub = new SchedulerEventHub(1000, _options.TimelineSpan, eventsTransformer,services.Clerk,_options);
             if (services.EventSource != null)
             {
-                services.EventSource.EventEmitted += (sender, args) => { eventHub.Push(args.Payload); };
+                services.EventSource.EventEmitted += (sender, args) => { eventHub.Push(args.Payload, args.Context); };
             }
 
             return new SchedulerHost(

@@ -8,7 +8,7 @@
     {
         public SchedulerEvent(
             int id,
-            DateTime date,
+            long date,
             SchedulerEventScope scope,
             SchedulerEventType eventType,
             string itemKey,
@@ -17,7 +17,7 @@
             ErrorMessage[] errors)
         {
             Id = id;
-            Date = date.UnixTicks();
+            Date = date;
             Scope = scope;
             EventType = eventType;
             ItemKey = itemKey;
