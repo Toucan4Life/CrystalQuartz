@@ -6,9 +6,11 @@ using CrystalQuartz.Core.SchedulerProviders;
 
 namespace CrystalQuartz.Application
 {
+    using System.Data;
     using System.Threading.Tasks;
     using Commands;
     using Commands.Serialization;
+    using Microsoft.Data.SqlClient;
     using WebFramework;
     using WebFramework.HttpAbstractions;
 
@@ -60,6 +62,34 @@ namespace CrystalQuartz.Application
 
         public override IRunningApplication Run()
         {
+            if (_options.ClusterConnectionString != null)
+            {
+                using (SqlConnection connection = new SqlConnection(_options.ClusterConnectionString))
+                {
+                    connection.Open();
+                    SqlCommand cmd = new SqlCommand(@"IF EXISTS(
+                    SELECT 1 FROM INFORMATION_SCHEMA.TABLES 
+                    WHERE TABLE_NAME = 'QRTZ_CRYSTAL') 
+                    SELECT 1 ELSE SELECT 0", connection);
+
+                    int exists = (int)cmd.ExecuteScalar();
+                    if (exists == 0)
+                    {
+                        SqlCommand cmd2 = new SqlCommand(@"CREATE TABLE QRTZ_CRYSTAL (
+                           Id bigint IDENTITY(1,1) PRIMARY KEY, 
+                            Date bigint,
+                            Scope varchar(255),
+                            EventType varchar(255),
+                            itemKey varchar(255),
+                            fireInstanceId varchar(255),
+                            faulted varchar(255),
+                            ErrorMessages nvarchar(max),
+                        );", connection);
+                        cmd2.ExecuteNonQuery();
+                    }
+                }
+
+            }
             IRunningApplication result = new LazyApplication(_schedulerHostInitializer, base.Run());
 
             if (!_options.LazyInit)

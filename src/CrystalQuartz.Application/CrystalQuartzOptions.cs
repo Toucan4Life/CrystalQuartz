@@ -88,7 +88,7 @@
         /// In Clustered mode, each job should have the DataPersistence attribute, as 
         /// CrystalQuartz will use the job data map to synchronize between the cluster
         /// </summary>
-        public bool IsClustered { get; set; }
+        public string ClusterConnectionString { get; set; }
     }
 
     public class ConfigurableTraversingOptions

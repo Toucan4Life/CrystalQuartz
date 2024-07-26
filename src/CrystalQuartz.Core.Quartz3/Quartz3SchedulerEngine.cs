@@ -26,7 +26,7 @@ namespace CrystalQuartz.Core.Quartz3
             }
 
             return new SchedulerServices(
-                new Quartz3SchedulerClerk(scheduler),
+                new Quartz3SchedulerClerk(scheduler, options),
                 new Quartz3SchedulerCommander(scheduler),
                 await CreateEventSource(scheduler, options));
         }

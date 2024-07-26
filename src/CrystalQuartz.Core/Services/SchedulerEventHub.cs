@@ -3,11 +3,15 @@
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
+    using System.Data;
     using System.Linq;
+    using System.Net.WebSockets;
     using System.Threading;
     using CrystalQuartz.Core.Contracts;
+    using CrystalQuartz.Core.Domain.Base;
     using CrystalQuartz.Core.Domain.Events;
     using CrystalQuartz.Core.Utils;
+    using Microsoft.Data.SqlClient;
     using Newtonsoft.Json;
     using Quartz;
     using Quartz.Impl.Matchers;
@@ -22,7 +26,6 @@
         private readonly IEventsTransformer _eventsTransformer;
         private readonly ISchedulerClerk _scheduler;
         private readonly Options _options;
-        private int _previousId;
 
         public SchedulerEventHub(int maxCapacity, TimeSpan hubSpan, IEventsTransformer eventsTransformer, ISchedulerClerk scheduler, Options options)
         {
@@ -31,32 +34,38 @@
             _hubSpanMilliseconds = (long)hubSpan.TotalMilliseconds;
             _scheduler = scheduler;
             _options = options;
-
-            _previousId = 0;
         }
 
         public void Push(RawSchedulerEvent @event, IJobExecutionContext? context)
         {
-            int id = Interlocked.Increment(ref _previousId);
-            SchedulerEvent item = _eventsTransformer.Transform(id, @event);
+            SchedulerEvent item = _eventsTransformer.Transform(null, @event);
 
-            if (_options.IsClustered && context != null)
+            if (_options.ClusterConnectionString != null && context != null)
             {
-                var events = new List<SchedulerEvent>();
-
-                IJobDetail jobDetail = context.JobDetail;
-                if (jobDetail.JobDataMap.Contains("CrystalQuartz"))
+                using (SqlConnection connection = new SqlConnection(_options.ClusterConnectionString))
                 {
-                    var datamap = jobDetail.JobDataMap.GetString("CrystalQuartz");
-                    events = JsonConvert.DeserializeObject<List<SchedulerEvent>>(datamap);
+                    connection.Open();
+                    SqlCommand cmd = new SqlCommand(
+                        @"INSERT INTO QRTZ_CRYSTAL (Date, Scope, EventType,itemKey,fireInstanceId,faulted,ErrorMessages) 
+                        VALUES  (@Date, @Scope, @EventType,@itemKey,@fireInstanceId,@faulted,@ErrorMessages)",
+                        connection);
+
+                    cmd.Parameters.Add("@Date", SqlDbType.BigInt).Value = item.Date;
+                    cmd.Parameters.Add("@Scope", SqlDbType.VarChar).Value = item.Scope;
+                    cmd.Parameters.Add("@EventType", SqlDbType.VarChar).Value = item.EventType;
+                    cmd.Parameters.Add("@itemKey", SqlDbType.VarChar).Value = item.ItemKey;
+                    cmd.Parameters.Add("@fireInstanceId", SqlDbType.VarChar).Value = item.FireInstanceId;
+                    cmd.Parameters.Add("@faulted", SqlDbType.VarChar).Value = item.Faulted;
+                    cmd.Parameters.Add("@ErrorMessages", SqlDbType.NVarChar).Value = JsonConvert.SerializeObject(item.Errors);
+                    cmd.ExecuteNonQuery();
+
+                    SqlCommand cmd2 = new SqlCommand(
+                       @"DELETE FROM QRTZ_CRYSTAL WHERE Date < @Date",
+                       connection);
+
+                    cmd2.Parameters.Add("@Date", SqlDbType.BigInt).Value = (DateTime.Now - TimeSpan.FromMilliseconds(_hubSpanMilliseconds) - TimeSpan.FromSeconds(10)).UnixTicks();
+                    cmd2.ExecuteNonQuery();
                 }
-
-                events.Add(item);
-                var eventAsString = JsonConvert.SerializeObject(events
-                .Where(e => DateTime.Now.UnixTicks() - e.Date < _hubSpanMilliseconds + TimeSpan.FromSeconds(10).Milliseconds)
-                .ToList());
-
-                jobDetail.JobDataMap.Put("CrystalQuartz", eventAsString);
             }
             else
             {
@@ -81,7 +90,7 @@
 
         private IEnumerable<SchedulerEvent> FetchEvents(int edgeId)
         {
-            if (!_options.IsClustered)
+            if (_options.ClusterConnectionString == null)
             {
                 bool edgeFound = false;
 
@@ -107,20 +116,31 @@
             }
             else
             {
-                IScheduler scheduler = _scheduler.GetScheduler();
-                var jobs = scheduler.GetJobKeys(GroupMatcher<JobKey>.AnyGroup()).Result.SelectMany(jk =>
+                List<SchedulerEvent> jobs = new List<SchedulerEvent>();
+                using (SqlConnection connection = new SqlConnection(_options.ClusterConnectionString))
                 {
-                    JobDataMap jobDataMap = scheduler.GetJobDetail(jk).Result.JobDataMap;
-                    if (jobDataMap.Contains("CrystalQuartz"))
+                    connection.Open();
+                    SqlCommand cmd = new SqlCommand(@"SELECT * FROM QRTZ_CRYSTAL WHERE ID > @ID", connection);
+                    cmd.Parameters.Add("@ID", SqlDbType.BigInt).Value = edgeId;
+
+                    using (SqlDataReader rdr = cmd.ExecuteReader())
                     {
-                        var datamap = jobDataMap.GetString("CrystalQuartz");
-                        return JsonConvert.DeserializeObject<List<SchedulerEvent>>(datamap);
+                        while (rdr.Read())
+                        {
+                            jobs.Add(new SchedulerEvent(
+                                (long)rdr["Id"],
+                                (long)rdr["Date"],
+                                (SchedulerEventScope)Enum.Parse(typeof(SchedulerEventScope), (string)rdr["Scope"]),
+                                (SchedulerEventType)Enum.Parse(typeof(SchedulerEventType), (string)rdr["EventType"]),
+                                (string)rdr["itemKey"],
+                                (string)rdr["fireInstanceId"],
+                                bool.Parse((string)rdr["faulted"]),
+                                JsonConvert.DeserializeObject<List<ErrorMessage>>((string)rdr["ErrorMessages"])?.ToArray()));
+                        }
                     }
+                }
 
-                    return new List<SchedulerEvent>();
-                }).Where(e => e != null)?.ToList() ?? new List<SchedulerEvent>();
-
-                var jobs1 = jobs.Concat(_events).Where(ev => ev.Id >= edgeId).ToList();
+                var jobs1 = jobs.Concat(_events).Where(ev => ev.Id > edgeId).ToList();
                 foreach (var job in jobs1)
                 {
                     yield return job;

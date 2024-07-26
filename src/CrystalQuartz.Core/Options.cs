@@ -28,7 +28,7 @@
             Type[] allowedJobTypes,
             Action<Exception> errorAction,
             bool isReadOnly,
-            bool isClustered = false)
+            string clusterConnectionString)
         {
             TimelineSpan = timelineSpan;
             SchedulerEngineResolvers = schedulerEngineResolvers;
@@ -44,7 +44,7 @@
             AllowedJobTypes = allowedJobTypes;
             ErrorAction = errorAction;
             IsReadOnly = isReadOnly;
-            IsClustered = isClustered;
+            ClusterConnectionString = clusterConnectionString;
         }
 
         public TimeSpan TimelineSpan { get; }
@@ -75,6 +75,6 @@
 
         public bool IsReadOnly { get; }
 
-        public bool IsClustered { get; }
+        public string ClusterConnectionString { get; }
     }
 }

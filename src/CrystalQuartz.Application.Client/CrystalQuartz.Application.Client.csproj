@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <PackageId>Toucan4Life.$(AssemblyName)</PackageId>
     <Authors>Toucan4Life</Authors>
-      <Version>1.1.0</Version>
+      <Version>1.2.0</Version>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="dist-dev-server\**" />

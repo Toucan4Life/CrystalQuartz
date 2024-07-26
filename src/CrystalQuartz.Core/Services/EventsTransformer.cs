@@ -20,7 +20,7 @@
             _jobResultAnalyzer = jobResultAnalyzer;
         }
 
-        public SchedulerEvent Transform(int id, RawSchedulerEvent rawEvent)
+        public SchedulerEvent Transform(int? id, RawSchedulerEvent rawEvent)
         {
             JobResult jobResult = GetActualJobResult(rawEvent) ?? JobResult.Success;
 

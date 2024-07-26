@@ -77,9 +77,10 @@
                     context.FireInstanceId),
                     context);
             }
-            catch
+            catch (Exception ex)
             {
                 // just ignore this
+                // throw ex;
             }
 
             return CompletedTask;

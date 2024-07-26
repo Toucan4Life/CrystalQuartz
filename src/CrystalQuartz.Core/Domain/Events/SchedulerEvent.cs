@@ -7,7 +7,7 @@
     public class SchedulerEvent
     {
         public SchedulerEvent(
-            int id,
+            long? id,
             long date,
             SchedulerEventScope scope,
             SchedulerEventType eventType,
@@ -26,7 +26,7 @@
             Errors = errors;
         }
 
-        public int Id { get; }
+        public long? Id { get; }
 
         public long Date { get; }
 

@@ -2,12 +2,14 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Data;
     using System.Linq;
     using System.Threading.Tasks;
     using CrystalQuartz.Core.Contracts;
     using CrystalQuartz.Core.Domain;
     using CrystalQuartz.Core.Domain.Activities;
     using CrystalQuartz.Core.Utils;
+    using Microsoft.Data.SqlClient;
     using Quartz;
     using Quartz.Impl.Matchers;
 
@@ -15,26 +17,19 @@
     {
         private static readonly TriggerTypeExtractor TriggerTypeExtractor = new TriggerTypeExtractor();
         private readonly IScheduler _scheduler;
+        private readonly Options _options;
 
-        public Quartz3SchedulerClerk(IScheduler scheduler)
+        public Quartz3SchedulerClerk(IScheduler scheduler, Options options)
         {
             _scheduler = scheduler;
+            _options = options;
         }
 
         public async Task<SchedulerData> GetSchedulerData()
         {
             IScheduler scheduler = _scheduler;
             SchedulerMetaData metadata = await scheduler.GetMetaData();
-
-            IReadOnlyCollection<IJobExecutionContext> currentlyExecutingJobs = await scheduler.GetCurrentlyExecutingJobs();
-            IList<ExecutingJobInfo> inProgressJobs = metadata.SchedulerRemote ? (IList<ExecutingJobInfo>)new ExecutingJobInfo[0] :
-                currentlyExecutingJobs
-                    .Select(x => new ExecutingJobInfo
-                    {
-                        UniqueTriggerKey = x.Trigger.Key.ToString(),
-                        FireInstanceId = x.FireInstanceId,
-                    })
-                    .ToList();
+            IList<ExecutingJobInfo> inProgressJobs = await GetInProgressJob(scheduler, metadata);
 
             IReadOnlyCollection<JobKey> jobKeys = await scheduler.GetJobKeys(GroupMatcher<JobKey>.AnyGroup());
 
@@ -49,6 +44,38 @@
                 RunningSince = metadata.RunningSince.ToDateTime(),
                 InProgress = inProgressJobs,
             };
+        }
+
+        public async Task<IList<ExecutingJobInfo>> GetInProgressJob(IScheduler scheduler, SchedulerMetaData metadata)
+        {
+            if (_options.ClusterConnectionString == null)
+            {
+                return metadata.SchedulerRemote ? (IList<ExecutingJobInfo>)new ExecutingJobInfo[0] :
+                (await scheduler.GetCurrentlyExecutingJobs())
+                    .Select(x => new ExecutingJobInfo
+                    {
+                        UniqueTriggerKey = x.Trigger.Key.ToString(),
+                        FireInstanceId = x.FireInstanceId,
+                    })
+                    .ToList();
+            }
+
+            List<ExecutingJobInfo> jobs = new List<ExecutingJobInfo>();
+            using (SqlConnection connection = new SqlConnection(_options.ClusterConnectionString))
+            {
+                connection.Open();
+                SqlCommand cmd = new SqlCommand(@"select * from dbo.QRTZ_Crystal Where Id in (Select  Max(Id) from dbo.QRTZ_Crystal group by itemKey) and EventType != 'Complete' ", connection);
+
+                using (SqlDataReader rdr = cmd.ExecuteReader())
+                {
+                    while (rdr.Read())
+                    {
+                        jobs.Add(new ExecutingJobInfo { FireInstanceId = (string)rdr["fireInstanceId"], UniqueTriggerKey = (string)rdr["itemKey"] });
+                    }
+                }
+            }
+
+            return jobs;
         }
 
         public async Task<JobDetailsData?> GetJobDetailsData(string name, string group)

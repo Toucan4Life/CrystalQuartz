@@ -13,7 +13,7 @@
             await output.WriteAsync('{');
             await output.WritePropertyName("_");
             await output.WriteAsync('"');
-            await output.WriteAsync(target.Id.ToString(CultureInfo.InvariantCulture));
+            await output.WriteAsync(target.Id?.ToString(CultureInfo.InvariantCulture));
             await output.WriteAsync('|');
             await output.WriteAsync(target.Date.ToString(CultureInfo.InvariantCulture));
             await output.WriteAsync('|');

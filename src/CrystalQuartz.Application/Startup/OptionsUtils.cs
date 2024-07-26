@@ -40,7 +40,7 @@
                 options.AllowedJobTypes ?? new Type[0],
                 options.OnUnhandledPanelException,
                 options.IsReadOnly,
-                options.IsClustered);
+                options.ClusterConnectionString);
         }
 
         private static IJobResultAnalyzer CreateJobResultAnalyzer(JobResultAnalyserOptions options)

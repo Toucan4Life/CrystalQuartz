@@ -11,6 +11,6 @@
         /// <param name="id">new id to assign.</param>
         /// <param name="rawEvent">emitted event.</param>
         /// <returns></returns>
-        SchedulerEvent Transform(int id, RawSchedulerEvent rawEvent);
+        SchedulerEvent Transform(int? id, RawSchedulerEvent rawEvent);
     }
 }
