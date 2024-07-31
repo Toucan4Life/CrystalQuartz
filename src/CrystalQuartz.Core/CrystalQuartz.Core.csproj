@@ -10,7 +10,7 @@
     <Nullable>enable</Nullable>
     <PackageId>Toucan4Life.$(AssemblyName)</PackageId>
     <Authors>Toucan4Life</Authors>
-    <Version>1.2.0</Version>
+    <Version>1.2.1</Version>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\CommonAssemblyInfo.cs">

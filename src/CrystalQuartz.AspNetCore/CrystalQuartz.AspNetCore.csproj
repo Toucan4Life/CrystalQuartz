@@ -3,7 +3,7 @@
 		<TargetFrameworks>netstandard2.1</TargetFrameworks>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<LangVersion>8</LangVersion>
-		<Version>1.2.0</Version>
+		<Version>1.2.1</Version>
 		<OutputPath>..\..\Artifacts\bin\$(Configuration)</OutputPath>
 		<PackageId>Toucan4Life.$(AssemblyName)</PackageId>
 		<CodeAnalysisRuleSet>../../common.ruleset</CodeAnalysisRuleSet>
